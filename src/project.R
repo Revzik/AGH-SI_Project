@@ -165,23 +165,42 @@ old_jazz <- filter(imp_old_plugin, muzyka == "jazz")
 old_pop <- filter(imp_old_plugin, muzyka == "pop")
 old_symf <- filter(imp_old_plugin, muzyka == "symf")
 
+old_jazz_stats <- szukane(old_jazz)
+old_pop_stats <- szukane(old_pop)
+old_symf_stats <-szukane(old_symf)
+
 new_jazz <- filter(imp_new_plugin, muzyka == "jazz")
 new_pop <- filter(imp_new_plugin, muzyka == "pop")
 new_symf <- filter(imp_new_plugin, muzyka == "symf")
 
+new_jazz_stats <- szukane(new_jazz)
+new_pop_stats <- szukane(new_pop)
+new_symf_stats <- szukane(new_symf)
+
 # Ze wzgledu na kryterium
 old_natural <- filter(imp_old_plugin, kryterium == "naturalnosc")
+ONS <- szukane(old_natural)
 old_space <- filter(imp_old_plugin, kryterium == "przestrzennosc")
+OSS <- szukane(old_space)
 old_feel <- filter(imp_old_plugin, kryterium == "wrazenie")
-
+OFS <- szukane(old_feel)
 new_natural <- filter(imp_new_plugin, kryterium == "naturalnosc")
 new_space <- filter(imp_new_plugin, kryterium == "przestrzennosc")
 new_feel <- filter(imp_new_plugin, kryterium == "wrazenie")
 
+NNS <-szukane(new_natural)
+NSS <-szukane(new_space)
+NFS <-szukane(new_feel)
 # Gatunki zaleznie od doswiadczenia
 old_jazz_musician <- filter(imp_old_plugin, muzyka == "jazz", doswiadczenie == "muzyk")
 old_pop_musician <- filter(imp_old_plugin, muzyka == "pop", doswiadczenie == "muzyk")
 old_symf_musician <- filter(imp_old_plugin, muzyka == "symf", doswiadczenie == "muzyk")
+
+OJMS <-szukane(old_jazz_musician)
+
+old_jazz_nonmusician_stats <- szukane(old_jazz_nonmusician)
+Old_pop_nonmusician_stats <- szukane(old_pop_nonmusician)
+old_symf_nonmusician_stats <- szukane(old_symf_nonmusician)
 
 old_jazz_nonmusician <- filter(imp_old_plugin, muzyka == "jazz", doswiadczenie == "brak")
 old_pop_nonmusician <- filter(imp_old_plugin, muzyka == "pop", doswiadczenie == "brak")
@@ -191,27 +210,51 @@ new_jazz_musician <- filter(imp_new_plugin, muzyka == "jazz", doswiadczenie == "
 new_pop_musician <- filter(imp_new_plugin, muzyka == "pop", doswiadczenie == "muzyk")
 new_symf_musician <- filter(imp_new_plugin, muzyka == "symf", doswiadczenie == "muzyk")
 
+new_jms <- szukane(new_jazz_musician)
+new_pms <- szukane(new_pop_musician)
+new_sms <- szukane(new_symf_musician)
+
 new_jazz_nonmusician <- filter(imp_new_plugin, muzyka == "jazz", doswiadczenie == "brak")
 new_pop_nonmusician <- filter(imp_new_plugin, muzyka == "pop", doswiadczenie == "brak")
 new_symf_nonmusician <- filter(imp_new_plugin, muzyka == "symf", doswiadczenie == "brak")
 
+new_JNMS <- szukane(new_jazz_nonmusician)
+new_PNMS <-szukane(new_pop_nonmusician)
+new_SNMS <-szukane(new_symf_nonmusician)
 # Kryterium zalezne od doswiadczenia
+
+# NOWE BOXY!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+boxplot(old_natural_musician$wynik, old_space_musician$wynik, old_feel_musician$wynik, main="Wyniki starej wersji wtyczki - wrazenie - muzycy", ylab="Wynik", names=c("Naturalnosc", "Przestrzennosc", "Wrazenie"))
+boxplot(new_natural_musician$wynik, new_space_musician$wynik, new_feel_musician$wynik, main="Wyniki starej nowej wtyczki - wrazenie - muzycy", ylab="Wynik", names=c("Naturalnosc", "Przestrzennosc", "Wrazenie"))
+
 old_natural_musician <- filter(imp_old_plugin, kryterium == "naturalnosc", doswiadczenie == "muzyk")
 old_space_musician <- filter(imp_old_plugin, kryterium == "przestrzennosc", doswiadczenie == "muzyk")
 old_feel_musician <- filter(imp_old_plugin, kryterium == "wrazenie", doswiadczenie == "muzyk")
 
+ONMS <-szukane(old_natural_musician)
+OSM <-szukane(old_space_musician)
+OFM <-szukane(old_feel_musician)
 old_natural_nonmusician <- filter(imp_old_plugin, kryterium == "naturalnosc", doswiadczenie == "brak")
 old_space_nonmusician <- filter(imp_old_plugin, kryterium == "przestrzennosc", doswiadczenie == "brak")
 old_feel_nonmusician <- filter(imp_old_plugin, kryterium == "wrazenie", doswiadczenie == "brak")
 
+ONNM <- szukane(old_natural_nonmusician)
+OSNM <-szukane(old_space_nonmusician)
+OFNM <-szukane(old_feel_nonmusician)
 new_natural_musician <- filter(imp_new_plugin, kryterium == "naturalnosc", doswiadczenie == "muzyk")
 new_space_musician <- filter(imp_new_plugin, kryterium == "przestrzennosc", doswiadczenie == "muzyk")
 new_feel_musician <- filter(imp_new_plugin, kryterium == "wrazenie", doswiadczenie == "muzyk")
 
+NNM <-szukane(new_natural_musician)
+NSM <-szukane(new_space_musician)
+NFM <-szukane(new_feel_musician)
 new_natural_nonmusician <- filter(imp_new_plugin, kryterium == "naturalnosc", doswiadczenie == "brak")
 new_space_nonmusician <- filter(imp_new_plugin, kryterium == "przestrzennosc", doswiadczenie == "brak")
 new_feel_nonmusician <- filter(imp_new_plugin, kryterium == "wrazenie", doswiadczenie == "brak")
 
+NNNM <-szukane(new_natural_nonmusician)
+NSNM <-szukane(new_space_nonmusician)
+NFNM <-szukane(new_feel_nonmusician)
 # Gatunki zaleznie od kryterium
 old_jazz_natural <- filter(imp_old_plugin, muzyka == "jazz", kryterium == "naturalnosc")
 old_pop_natural <- filter(imp_old_plugin, muzyka == "pop", kryterium == "naturalnosc")
@@ -294,12 +337,20 @@ old_plug_stat <- szukane(imp_old_plugin)
 new_plug_stat <- szukane(imp_new_plugin)
 
 #2.1.2. Histogram
-hist(imp_old_plugin$wynik, main="Oceny dla starej wtyczki",xlab="Oceny", ylab="Gestosc wystapien", breaks=0.5:5.5, freq= FALSE, prob=TRUE)
-hist(imp_new_plugin$wynik, main="Oceny dla nowej wtyczki",xlab="Oceny", ylab="Gestosc wystapien", breaks=0.5:5.5, freq= FALSE, prob=TRUE)
+hist(imp_old_plugin$wynik, main="Wyniki dla starej wersji wtyczki",xlab="Oceny", ylab="Gestosc wystapien", breaks=0.5:5.5, freq= FALSE, prob=TRUE)
+hist(imp_new_plugin$wynik, main="Wyniki dla nowej wersji wtyczki",xlab="Oceny", ylab="Gestosc wystapien", breaks=0.5:5.5, freq= FALSE, prob=TRUE)
+
+hist(old_nonmusician$wynik, main="Wyniki dla starej wersji wtyczki - brak doswiadczenia",xlab="Oceny", ylab="Gestosc wystapien", breaks=0.5:5.5, freq= FALSE, prob=TRUE)
+hist(old_musician$wynik, main="Wyniki dla starej wersji wtyczki - muzycy",xlab="Oceny", ylab="Gestosc wystapien", breaks=0.5:5.5, freq= FALSE, prob=TRUE)
+
+hist(new_nonmusician$wynik, main="Wyniki dla nowej wersji wtyczki - brak doswiadczenia",xlab="Oceny", ylab="Gestosc wystapien", breaks=0.5:5.5, freq= FALSE, prob=TRUE)
+hist(new_musician$wynik, main="Wyniki dla nowej wersji wtyczki - muzycy",xlab="Oceny", ylab="Gestosc wystapien", breaks=0.5:5.5, freq= FALSE, prob=TRUE)
 
 #2.1.3. Boxplot
-boxplot(imp_old_plugin$wynik, imp_new_plugin$wynik, main="Oceny dwoch wersji wtyczki", ylab="Wynik", names=c("Stara wtyczka", "Nowa wtyczka"))
+boxplot(imp_old_plugin$wynik, imp_new_plugin$wynik, main="Wyniki starej i nowej wersji wtyczki", ylab="Wynik", names=c("Stara wtyczka", "Nowa wtyczka"))
 
+boxplot(old_nonmusician$wynik, old_musician$wynik, main="Oceny starej wersji wtyczki - podzial na doswiadczenie", ylab="Wynik", names=c("Brak doswiadczenia", "Muzyk"))
+boxplot(new_nonmusician$wynik, new_musician$wynik, main="Oceny nowej wersji wtyczki - podzial na doswiadczenie", ylab="Wynik", names=c("Brak doswiadczenia", "Muzyk"))
 #2.1.4 Wykres gestosci
 plot(density(imp_old_plugin$wynik), main="Wykres gestosci - stara wtyczka", ylab="Czestotliwosc wystapien")
 plot(density(imp_new_plugin$wynik), main="Wykres gestosci - nowa wtyczka", ylab="Czestotliwosc wystapien")
@@ -482,3 +533,4 @@ old_pop_feel_space_nonmusician_cor <- cor(old_pop_feel_nonmusician$wynik, old_po
 new_pop_natural_space_nonmusician_cor <- cor(new_pop_natural_nonmusician$wynik, new_pop_space_nonmusician$wynik)
 new_pop_natural_feel_nonmusician_cor <- cor(new_pop_natural_nonmusician$wynik, new_pop_feel_nonmusician$wynik)
 new_pop_feel_space_nonmusician_cor <- cor(new_pop_feel_nonmusician$wynik, new_pop_space_nonmusician$wynik)
+
