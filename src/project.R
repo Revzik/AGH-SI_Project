@@ -5,11 +5,13 @@
 # ==================================================
 
 # ===== I. PRZYGOTOWANIE DANYCH DO ANALIZY =====
+rm(list = ls())
 
 # 1.Import pakiet?w:
 library(RCurl)  # Pakiet umozliwiajacy wczytanie danych na podstawie adresu strony.
 library(dplyr)  # Pakiet umozliwiajacy prace z danymi.
-library(mice)  # Pamiet umozliwiajacy narysowanie wykresu brakujacych wartosci.
+library(mice)   # Pakiet umozliwiajacy narysowanie wykresu brakujacych wartosci.
+library(e1071)  # Pakiet umozliwiajacy obliczenie wspolczynnika skosnosci
 
 # 2. Wczytanie danych do srodowiska programistycznego:
 URLaddress <- getURL("https://raw.githubusercontent.com/drynczak/SI_project/master/wyniki%20.csv")
@@ -51,25 +53,29 @@ md.pattern(imp_new_plugin, plot = TRUE, rotate.names = FALSE)
 # 4d. Kolejnym etapem analizy blednych wartosci bylo okreslenie liczby osob, ktore udzielaja blednych odpowiedzi.
 # Na tym etapie pozwoli to nam podcjac decyzje, czy faktycznie mamy usunac te osoby, czy je zostawic z zamienionymi wartosciami.
 # Zarowno dla nowej jak i starej wtyczki wyselekcjonowano osoby, ktore udzielily bledne odpowiedzi.
-miss_values_old <- imp_old_plugin %>% filter(is.na(wynik))
-miss_values_new <- imp_new_plugin %>% filter(is.na(wynik))
+miss <- filter(imp_data, is.na(wynik))
+miss_old <- filter(miss, wersja == "S")
+miss_new <- filter(miss, wersja == "N")
 
 # Nastepnie podzielono brakujace dane ze wzgledu na doswiadczenie osob, ktore udzielily blednych odpowiedzi:
-old_miss_nmus <- filter(miss_values_old, doswiadczenie == 'brak')
-old_miss_m <- filter(miss_values_old, doswiadczenie == 'muzyk')
+miss_old_nmus <- filter(miss_old, doswiadczenie == 'brak')
+miss_old_mus <- filter(miss_old, doswiadczenie == 'muzyk')
 
-new_miss_nmus <- filter(miss_values_new, doswiadczenie == 'brak')
-new_miss_m <- filter(miss_values_new, doswiadczenie == 'muzyk')
+miss_new_nmus <- filter(miss_new, doswiadczenie == 'brak')
+miss_new_mus <- filter(miss_new, doswiadczenie == 'muzyk')
 
-# I obliczono liczbe osob, ktore udzielily blednych odpowiedzi ze wzgledu na nowa wtyczke i stara:
-miss_num_old = 5  # To na razie na stale dalem. Jest to ogolna liczba osob, ktore udzielily blednych odpowiedzi dla starej wtyczki.
-miss_num_new = 3  # To tez na razie na stale. Jest to ogolna liczba osob, ktore udzelily blednych odpowiedzi dla nowej wtyczki.
+# Wyniki podliczono:
+miss_num_old <- nrow(miss_old)
+miss_num_old_mus <- nrow(miss_old_mus)
+miss_num_old_nmus <- nrow(miss_old_nmus)
 
-miss_num_old_mus = 3  # Mamy 3 muzykow, ktorzy odpowiedzieli bledne dla starej wtyczki.
-miss_num_old_nmus = 2 # I dwie osoby nie bedace muzykami, ktore odpowiedzialy blednie dla starej wtyczki.
+miss_num_old <- nrow(miss_old)
+miss_num_old_mus <- nrow(miss_old_mus)
+miss_num_old_nmus <- nrow(miss_old_nmus)
 
-miss_num_new_mus = 1  # Jeden muzyk odpowiedzial zle dla nowej wtyczki.
-miss_num_new_nmus = 2 # Dwoje osob bez doswiadczenia muzycznego odpowiedzialo blednie dla nowej wtyczki.
+# sprawdzono takze ile osob odpowiadalo blednie
+miss_people <- distinct(miss$sluchacz)
+
 
 # 4e. Na tym etapie pracy z danymi zastanowiono sie, czy warto usunac wyniki. Jest to najbardziej radykalne rozwiazanie, jednak
 # prowadzi do sytuacji, ze zawezy nam grupe badanych osob i utrudni nam to dalsza analize.
@@ -85,6 +91,7 @@ podsumowanie <- function(dane) {
   srednia <- round(mean(dane$wynik, na.rm = TRUE), digits = 2)
   mediana <- median(dane$wynik, na.rm = TRUE)
   odchylenie <- round(sd(dane$wynik, na.rm = TRUE), digits = 2)
+  skosnosc <- round(skewness(dane$wynik, na.rm = TRUE), digits = 2)
   kwantyle <- quantile(dane$wynik, na.rm = TRUE, probs = c(0.25, 0.5, 0.75),
                        names = FALSE)
   q1 <- kwantyle[1]
@@ -122,8 +129,8 @@ summ_new_imp <- podsumowanie(imp_new_plugin)
 # Jako ocena musi byc podana wartosc calkowita, dlatego wezmiemy mediane z wynikow jako zastapienie wartosci NA.
 
 # 4f. Zastapienie wartosci brakujacych NA mediana obliczona wczesniej.
-imp_old_plugin[is.na(imp_old_plugin)]= summ_old_imp$mediana
-imp_new_plugin[is.na(imp_new_plugin)]= summ_new_imp$mediana
+imp_old_plugin[is.na(imp_old_plugin)] <- summ_old_imp$mediana
+imp_new_plugin[is.na(imp_new_plugin)] <- summ_new_imp$mediana
 imputed_data <- rbind(imp_old_plugin, imp_new_plugin)
 
 # 4g. Sprawdzenie jak zamiana wartosci wplynela na srednie i mediane:
