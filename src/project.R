@@ -74,7 +74,9 @@ miss_num_old_mus <- nrow(miss_old_mus)
 miss_num_old_nmus <- nrow(miss_old_nmus)
 
 # sprawdzono takze ile osob odpowiadalo blednie
-miss_people <- distinct(miss$sluchacz)
+miss_people <- distinct(miss, sluchacz, .keep_all = TRUE) %>% select(sluchacz, doswiadczenie)
+miss_people_old <- distinct(miss_old, sluchacz, .keep_all = TRUE) %>% select(sluchacz, doswiadczenie)
+miss_people_new <- distinct(miss_new, sluchacz, .keep_all = TRUE) %>% select(sluchacz, doswiadczenie)
 
 
 # 4e. Na tym etapie pracy z danymi zastanowiono sie, czy warto usunac wyniki. Jest to najbardziej radykalne rozwiazanie, jednak
@@ -390,14 +392,30 @@ new_natural_space_cor <- cor(new_natural$wynik, new_space$wynik)
 new_natural_feel_cor <- cor(new_natural$wynik, new_feel$wynik)
 new_feel_space_cor <- cor(new_feel$wynik, new_space$wynik)
 
-# 5. Podzial - jazz dla wybranego kryterium
-old_pop_natural_space_cor <- cor(old_pop_natural$wynik, old_pop_space$wynik)
-old_pop_natural_feel_cor <- cor(old_pop_natural$wynik, old_pop_feel$wynik)
-old_pop_feel_space_cor <- cor(old_pop_feel$wynik, old_pop_space$wynik)
+old_natural_space_musician_cor <- cor(old_natural_musician$wynik, old_space_musician$wynik)
+old_natural_feel_musician_cor <- cor(old_natural_musician$wynik, old_feel_musician$wynik)
+old_feel_space_musician_cor <- cor(old_feel_musician$wynik, old_space_musician$wynik)
 
-new_pop_natural_space_cor <- cor(new_pop_natural$wynik, new_pop_space$wynik)
-new_pop_natural_feel_cor <- cor(new_pop_natural$wynik, new_pop_feel$wynik)
-new_pop_feel_space_cor <- cor(new_pop_feel$wynik, new_pop_space$wynik)
+new_natural_space_musician_cor <- cor(new_natural_musician$wynik, new_space_musician$wynik)
+new_natural_feel_musician_cor <- cor(new_natural_musician$wynik, new_feel_musician$wynik)
+new_feel_space_musician_cor <- cor(new_feel_musician$wynik, new_space_musician$wynik)
+
+old_natural_space_nonmusician_cor <- cor(old_natural_nonmusician$wynik, old_space_nonmusician$wynik)
+old_natural_feel_nonmusician_cor <- cor(old_natural_nonmusician$wynik, old_feel_nonmusician$wynik)
+old_feel_space_nonmusician_cor <- cor(old_feel_nonmusician$wynik, old_space_nonmusician$wynik)
+
+new_natural_space_nonmusician_cor <- cor(new_natural_nonmusician$wynik, new_space_nonmusician$wynik)
+new_natural_feel_nonmusician_cor <- cor(new_natural_nonmusician$wynik, new_feel_nonmusician$wynik)
+new_feel_space_nonmusician_cor <- cor(new_feel_nonmusician$wynik, new_space_nonmusician$wynik)
+
+# 5. Podzial - jazz dla wybranego kryterium
+old_jazz_natural_space_cor <- cor(old_jazz_natural$wynik, old_jazz_space$wynik)
+old_jazz_natural_feel_cor <- cor(old_jazz_natural$wynik, old_jazz_feel$wynik)
+old_jazz_feel_space_cor <- cor(old_jazz_feel$wynik, old_jazz_space$wynik)
+
+new_jazz_natural_space_cor <- cor(new_jazz_natural$wynik, new_jazz_space$wynik)
+new_jazz_natural_feel_cor <- cor(new_jazz_natural$wynik, new_jazz_feel$wynik)
+new_jazz_feel_space_cor <- cor(new_jazz_feel$wynik, new_jazz_space$wynik)
 
 old_jazz_natural_space_musician_cor <- cor(old_jazz_natural_musician$wynik, old_jazz_space_musician$wynik)
 old_jazz_natural_feel_musician_cor <- cor(old_jazz_natural_musician$wynik, old_jazz_feel_musician$wynik)
@@ -441,13 +459,13 @@ new_symf_natural_feel_nonmusician_cor <- cor(new_symf_natural_nonmusician$wynik,
 new_symf_feel_space_nonmusician_cor <- cor(new_symf_feel_nonmusician$wynik, new_symf_space_nonmusician$wynik)
 
 # 7. Podzial - pop dla wybranego kryterium
-old_jazz_natural_space_cor <- cor(old_jazz_natural$wynik, old_jazz_space$wynik)
-old_jazz_natural_feel_cor <- cor(old_jazz_natural$wynik, old_jazz_feel$wynik)
-old_jazz_feel_space_cor <- cor(old_jazz_feel$wynik, old_jazz_space$wynik)
+old_pop_natural_space_cor <- cor(old_pop_natural$wynik, old_pop_space$wynik)
+old_pop_natural_feel_cor <- cor(old_pop_natural$wynik, old_pop_feel$wynik)
+old_pop_feel_space_cor <- cor(old_pop_feel$wynik, old_pop_space$wynik)
 
-new_jazz_natural_space_cor <- cor(new_jazz_natural$wynik, new_jazz_space$wynik)
-new_jazz_natural_feel_cor <- cor(new_jazz_natural$wynik, new_jazz_feel$wynik)
-new_jazz_feel_space_cor <- cor(new_jazz_feel$wynik, new_jazz_space$wynik)
+new_pop_natural_space_cor <- cor(new_pop_natural$wynik, new_pop_space$wynik)
+new_pop_natural_feel_cor <- cor(new_pop_natural$wynik, new_pop_feel$wynik)
+new_pop_feel_space_cor <- cor(new_pop_feel$wynik, new_pop_space$wynik)
 
 old_pop_natural_space_musician_cor <- cor(old_pop_natural_musician$wynik, old_pop_space_musician$wynik)
 old_pop_natural_feel_musician_cor <- cor(old_pop_natural_musician$wynik, old_pop_feel_musician$wynik)
