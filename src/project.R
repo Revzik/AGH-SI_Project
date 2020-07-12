@@ -4,7 +4,30 @@
 # Projekt - 12.07.2020r.
 # ==================================================
 
-# ===== I. PRZYGOTOWANIE DANYCH DO ANALIZY =====
+# ===== Uzywane funkcje ========================================================
+# Krotkie podsumowanie danych do statystyki opisowej:
+podsumowanie <- function(dane) {
+  srednia <- round(mean(dane$wynik, na.rm = TRUE), digits = 2)
+  uniqv <- unique(dane$wynik)
+  moda <- uniqv[which.max(tabulate(match(dane$wynik, uniqv)))]
+  
+  kwantyle <- quantile(dane$wynik, na.rm = TRUE, probs = c(0.25, 0.5, 0.75), names = FALSE)
+  q1 <- kwantyle[1]
+  mediana <- kwantyle[2]
+  q3 <- kwantyle[3]
+  
+  odchylenie <- round(sd(dane$wynik, na.rm = TRUE), digits = 2)
+  skosnosc <- round(skewness(dane$wynik, na.rm = TRUE), digits = 2)
+  wspolczynnik_zmiennosci <- odchylenie/srednia
+  
+  rozrzut <- dane$wynik
+  rozstep_poprawny <- max(rozrzut) - min(rozrzut)
+  
+  return(data.frame(srednia, moda, mediana, q1, q3, rozstep_poprawny, odchylenie, skosnosc, wspolczynnik_zmiennosci))
+}
+
+
+# ===== I. PRZYGOTOWANIE DANYCH DO ANALIZY =====================================
 rm(list = ls())
 
 # 1.Import pakiet?w:
@@ -26,8 +49,6 @@ raw_data <- read.csv(text = URLaddress, header=TRUE)
 head(raw_data, n=10)  # Wczytanie pierwszych dziesi?ciu element?w.
 tail(raw_data, n=10)  # Wczytanie ostatnich dziesieciu element?w.
 summary(raw_data)
-# Po skorzystaniu z funkcji summary(), ktora jako argument przyjmuje wczytane dane zauwazono, ze minimalna wartosc w wynikach wynosi -1.
-# Wartosc ta jest niezgodna z przyjetymi kryteriami oceny wtyczek, dlatego poczatkowo podjeto decyzje o usunieciu tych wartosci ze zbioru danych.
 
 # 4. Pogrupowanie danych:
 # 4a. Podzial wczytanych danych na stara i nowa wersje wtyczki:
@@ -35,9 +56,6 @@ old_plugin <- filter(raw_data, wersja == 'S')
 new_plugin <- filter(raw_data, wersja == 'N')
 summary(old_plugin)
 summary(new_plugin)
-# Po przeprowadzeniu rozdzielenia danych na stara wersje wtyczki oraz nowa zauwazono, ze w obu tych przypadkach wystepuje wartosc ujemna w wynikach.
-# Podjeto zatem decyzje o zamianie wartosci niezgodnych z kryterium oceny na wartosc brakujaca - NA.
-# Jednak, aby nie modyfikowac danych wczytanych z pliku przypisano je do zmiennej tak, aby mozna bylo modyfikowac wartosci bez straty danych.
 
 # 4b. Zamiana niepoprawnych danych na wartosci brakujace NA:
 imp_data <- raw_data  # Zmienna imp_data zawiera elementy, ktore w dalym kodzie beda modyfikowane.
@@ -45,27 +63,23 @@ imp_data$wynik[imp_data$wynik < 0 | imp_data$wynik > 5] = NA  # Zamiana niepopra
 imp_old_plugin <- filter(imp_data, wersja == 'S')
 imp_new_plugin <- filter(imp_data, wersja == 'N')
 
-# 4c.Nastepnie w celu sprawdzenia, czy bledne wartosci zostaly zastapione wartosciami brakujacymi oraz aby sprawdzic, czy 
-# wartosci brakujace wystepuja w innych kolumnach sporzadzono wykresy ilustrujace brakujace wartosci:
+# 4c. Wykresy ilustrujace brakujace wartosci:
 md.pattern(imp_data, plot = TRUE, rotate.names = FALSE)
 md.pattern(imp_old_plugin, plot = TRUE, rotate.names = FALSE)
 md.pattern(imp_new_plugin, plot = TRUE, rotate.names = FALSE)
 
-# 4d. Kolejnym etapem analizy blednych wartosci bylo okreslenie liczby osob, ktore udzielaja blednych odpowiedzi.
-# Na tym etapie pozwoli to nam podcjac decyzje, czy faktycznie mamy usunac te osoby, czy je zostawic z zamienionymi wartosciami.
-# Zarowno dla nowej jak i starej wtyczki wyselekcjonowano osoby, ktore udzielily bledne odpowiedzi.
+# 4d. Okreslenie liczby osob, ktore udzielaja blednych odpowiedzi:
 miss <- filter(imp_data, is.na(wynik))
 miss_old <- filter(miss, wersja == "S")
 miss_new <- filter(miss, wersja == "N")
 
-# Nastepnie podzielono brakujace dane ze wzgledu na doswiadczenie osob, ktore udzielily blednych odpowiedzi:
 miss_old_nmus <- filter(miss_old, doswiadczenie == 'brak')
 miss_old_mus <- filter(miss_old, doswiadczenie == 'muzyk')
 
 miss_new_nmus <- filter(miss_new, doswiadczenie == 'brak')
 miss_new_mus <- filter(miss_new, doswiadczenie == 'muzyk')
 
-# Wyniki podliczono:
+# Podliczonenie:
 miss_num_old <- nrow(miss_old)
 miss_num_old_mus <- nrow(miss_old_mus)
 miss_num_old_nmus <- nrow(miss_old_nmus)
@@ -74,50 +88,17 @@ miss_num_old <- nrow(miss_old)
 miss_num_old_mus <- nrow(miss_old_mus)
 miss_num_old_nmus <- nrow(miss_old_nmus)
 
-# sprawdzono takze ile osob odpowiadalo blednie
+# Ile osob odpowiadalo blednie:
 miss_people <- distinct(miss, sluchacz, .keep_all = TRUE) %>% select(sluchacz, doswiadczenie)
 miss_people_old <- distinct(miss_old, sluchacz, .keep_all = TRUE) %>% select(sluchacz, doswiadczenie)
 miss_people_new <- distinct(miss_new, sluchacz, .keep_all = TRUE) %>% select(sluchacz, doswiadczenie)
 
 
-# 4e. Na tym etapie pracy z danymi zastanowiono sie, czy warto usunac wyniki. Jest to najbardziej radykalne rozwiazanie, jednak
-# prowadzi do sytuacji, ze zawezy nam grupe badanych osob i utrudni nam to dalsza analize.
-# Podstanowiono rozwazyc jedna z metod imputacji danych - zastapienie brakujacych danych srednia lub mediana.
-# Aby podjac decyzje o wyborze bardziej odpowiedniej metody imputacji danych obliczono zarowno srednia i mediane dla nowej wtyczki
-# i starej - bez podzialu na kryteria i doswiadczenie:
-# W tym celu stworzono funkcje, ktora umozliwia okreslenie podstawowych wartosci statystyki opisowej:
-
-# ===== Uzywane funkcje ========================================================
-# Krotkie podsumowanie wynikow:
-podsumowanie <- function(dane) {
-  srednia <- round(mean(dane$wynik, na.rm = TRUE), digits = 2)
-  uniqv <- unique(dane$wynik)
-  moda <- uniqv[which.max(tabulate(match(dane$wynik, uniqv)))]
-  
-  kwantyle <- quantile(dane$wynik, na.rm = TRUE, probs = c(0.25, 0.5, 0.75), names = FALSE)
-  q1 <- kwantyle[1]
-  mediana <- kwantyle[2]
-  q3 <- kwantyle[3]
-  
-  odchylenie <- round(sd(dane$wynik, na.rm = TRUE), digits = 2)
-  skosnosc <- round(skewness(dane$wynik, na.rm = TRUE), digits = 2)
-  wspolczynnik_zmiennosci <- odchylenie/srednia
-  
-  rozrzut <- dane$wynik
-  rozstep_poprawny <- max(rozrzut) - min(rozrzut)
-  
-  return(data.frame(srednia, moda, mediana, q1, q3, rozstep_poprawny, odchylenie, skosnosc, wspolczynnik_zmiennosci))
-}
-
-# ================================================== 
-
+# 4e. Zastapienie brakujacych danych srednia lub mediana:
 summ_old_imp <- podsumowanie(imp_old_plugin)
 summ_new_imp <- podsumowanie(imp_new_plugin)
 
-# Policzono miedzy innymi srednia i mediane dla nowej wtyczki i starej i widac, ze po zaokragleniu srednia jest rowna medianie.
-# Jako ocena musi byc podana wartosc calkowita, dlatego wezmiemy mediane z wynikow jako zastapienie wartosci NA.
-
-# 4f. Zastapienie wartosci brakujacych NA mediana obliczona wczesniej.
+# 4f. Zastapienie wartosci brakujacych NA mediana obliczona wczesniej:
 imp_old_plugin[is.na(imp_old_plugin)] <- summ_old_imp$mediana
 imp_new_plugin[is.na(imp_new_plugin)] <- summ_new_imp$mediana
 imputed_data <- rbind(imp_old_plugin, imp_new_plugin)
@@ -126,17 +107,7 @@ imputed_data <- rbind(imp_old_plugin, imp_new_plugin)
 summ_old_median <-podsumowanie(imp_old_plugin)
 summ_new_median <- podsumowanie(imp_new_plugin)
 
-# Wniosek: Podmienienie wartosci na mediane nie ma wplywu za bardzo na srednia - damy dane do tabeli i to porownany.
-# Na tym etapie mamy juz (albo dopiero) przygotowane dane i bedzie robiona dalsza analiza.
-
 # 4h. Sprawdzenie, czy w wynikach dla starej wtyczki i nowej wystepuja wartosci odstajace:
-# W tym celu zastosowano boxplot, aby to sprawdzic - do okreslenia wartosci odstajacych przyjelismy metode IQR:
-# Zastosowano rozstep cwiartkowy, ktory docelowo zaprogramowany jest w boxplocie RStudio.
-# Polega to na tym, ze bierzemy roznice pomiedzy trzecim i pierwszym kwartylem pomnozona razy 1.5.
-# To znaczy: Q1- 1.5(Q3-Q1) i Q1 - nie wezmie mniejszych wartosci
-# Q3+1.5(Q3-Q1) i Q3 - nie wezmie wiekszych wartosci.
-# Wszystkie obserwacje znajdujace sie poza wasami sa wartosciami odstajacymi, ktorych po rozdzieleniu ocen na stara wtyczke i nowa nie zauwazamy.
-
 boxplot(imp_old_plugin$wynik, imp_new_plugin$wynik, main="Oceny dwoch wersji wtyczki", ylab="wynik", names=c("Stara wtyczka", "Nowa wtyczka"))
 
 # ===== Podzial danych =========================================================
@@ -353,12 +324,9 @@ hist(new_musician$wynik, main="Wyniki dla nowej wersji wtyczki - muzycy",xlab="O
 
 #2.1.3. Boxplot
 boxplot(imp_old_plugin$wynik, imp_new_plugin$wynik, main="Wyniki starej i nowej wersji wtyczki", ylab="Wynik", names=c("Stara wtyczka", "Nowa wtyczka"))
-
 boxplot(old_nonmusician$wynik, old_musician$wynik, main="Oceny starej wersji wtyczki - podzial na doswiadczenie", ylab="Wynik", names=c("Brak doswiadczenia", "Muzyk"))
 boxplot(new_nonmusician$wynik, new_musician$wynik, main="Oceny nowej wersji wtyczki - podzial na doswiadczenie", ylab="Wynik", names=c("Brak doswiadczenia", "Muzyk"))
-#2.1.4 Wykres gestosci
-plot(density(imp_old_plugin$wynik), main="Wykres gestosci - stara wtyczka", ylab="Czestotliwosc wystapien")
-plot(density(imp_new_plugin$wynik), main="Wykres gestosci - nowa wtyczka", ylab="Czestotliwosc wystapien")
+
 
 #2.2. Porowanie starej wtyczki i nowej w zaleznosci od doswiadczenia
 # Obliczenie szukanych wartosci dla starej wtyczki - muzycy i niemuzycy
@@ -659,14 +627,28 @@ shapiro_new_pop_nonmusician <- shapiro.test(new_pop_nonmusician$wynik)
 shapiro_old_symf_nonmusician <- shapiro.test(old_symf_nonmusician$wynik)
 shapiro_new_symf_nonmusician <- shapiro.test(new_symf_nonmusician$wynik)
 
-
 # Analiza wspolczynnikow regresji liniowej
 # Analiza przestrzenności i wrażenia z podziałem na gatunki dla nowej wersji
 lm_new_space_feel <- lm(new_space$wynik~new_feel$wynik)
 lm_new_space_feel_jazz <- lm(new_jazz_space$wynik~new_jazz_feel$wynik)
 lm_new_space_feel_pop <- lm(new_pop_space$wynik~new_pop_feel$wynik)
 lm_new_space_feel_symf <- lm(new_symf_space$wynik~new_symf_feel$wynik)
-summ_lm_new_space_feel <- summary(lm_new_space_feel)
-summ_lm_new_space_feel_jazz <- summary(lm_new_space_feel_jazz)
-summ_lm_new_space_feel_pop <- summary(lm_new_space_feel_pop)
-summ_lm_new_space_feel_symf <- summary(lm_new_space_feel_symf)
+summary(lm_new_space_feel)
+summary(lm_new_space_feel_jazz)
+summary(lm_new_space_feel_pop)
+summary(lm_new_space_feel_symf)
+
+# Analiza przestrzenności i wrażenia dla popu i muzyki symfonicznej dla starej wersji
+lm_old_space_feel_pop <- lm(old_pop_space$wynik~old_pop_feel$wynik)
+lm_old_space_feel_pop_mus <- lm(old_pop_space_musician$wynik~old_pop_feel_musician$wynik)
+lm_old_space_feel_pop_nmus <- lm(old_pop_space_nonmusician$wynik~old_pop_feel_nonmusician$wynik)
+summary(lm_old_space_feel_pop)
+summary(lm_old_space_feel_pop_mus)
+summary(lm_old_space_feel_pop_nmus)
+
+lm_old_space_feel_symf <- lm(old_symf_space$wynik~old_symf_feel$wynik)
+lm_old_space_feel_symf_mus <- lm(old_symf_space_musician$wynik~old_symf_feel_musician$wynik)
+lm_old_space_feel_symf_nmus <- lm(old_symf_space_nonmusician$wynik~old_symf_feel_nonmusician$wynik)
+summary(lm_old_space_feel_symf)
+summary(lm_old_space_feel_symf_mus)
+summary(lm_old_space_feel_symf_nmus)
