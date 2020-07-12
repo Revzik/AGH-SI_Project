@@ -645,3 +645,19 @@ abline(lm(new_jazz_natural$wynik~new_jazz_feel$wynik))
 abline(lm(new_jazz_natural_musician$wynik~new_jazz_feel_musician$wynik), col = "red")
 abline(lm(new_jazz_natural_nonmusician$wynik~new_jazz_feel_nonmusician$wynik), col = "green")
 legend("bottomright", legend = c("ogolem", "muzycy", "brak dosw."), col = c("black", "red", "green"), lty = c(1, 1, 1))
+
+# ===== Wnioskowanie statystyczne ==============================================
+# Analiza wariancji dla roznych gatunkow muzyki w zaleznosci od doswiadczenia
+# Test Shapiro-Wilka w celu sprawdzenia normalnosci rozkladu
+shapiro_old_jazz_musician <- shapiro.test(old_jazz_musician$wynik)
+shapiro_new_jazz_musician <- shapiro.test(new_jazz_musician$wynik)
+shapiro_old_pop_musician <- shapiro.test(old_pop_musician$wynik)
+shapiro_new_pop_musician <- shapiro.test(new_pop_musician$wynik)
+shapiro_old_symf_musician <- shapiro.test(old_symf_musician$wynik)
+shapiro_new_symf_musician <- shapiro.test(new_symf_musician$wynik)
+shapiro_old_jazz_nonmusician <- shapiro.test(old_jazz_nonmusician$wynik)
+shapiro_new_jazz_nonmusician <- shapiro.test(new_jazz_nonmusician$wynik)
+shapiro_old_pop_nonmusician <- shapiro.test(old_pop_nonmusician$wynik)
+shapiro_new_pop_nonmusician <- shapiro.test(new_pop_nonmusician$wynik)
+shapiro_old_symf_nonmusician <- shapiro.test(old_symf_nonmusician$wynik)
+shapiro_new_symf_nonmusician <- shapiro.test(new_symf_nonmusician$wynik)
