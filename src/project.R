@@ -12,6 +12,7 @@ library(RCurl)  # Pakiet umozliwiajacy wczytanie danych na podstawie adresu stro
 library(dplyr)  # Pakiet umozliwiajacy prace z danymi.
 library(mice)   # Pakiet umozliwiajacy narysowanie wykresu brakujacych wartosci.
 library(e1071)  # Pakiet umozliwiajacy obliczenie wspolczynnika skosnosci
+library(car)    # Pakiet umozliwiajacy przeprowadzenie testu Levene'a
 
 # 2. Wczytanie danych do srodowiska programistycznego:
 URLaddress <- getURL("https://raw.githubusercontent.com/drynczak/SI_project/master/wyniki%20.csv")
@@ -562,7 +563,7 @@ new_pop_feel_space_nonmusician_cor <- cor(new_pop_feel_nonmusician$wynik, new_po
 # 8.1 Regresja liniowa popu i muzyki symfonicznej
 plot(old_pop_musician$wynik, old_symf_musician$wynik,
      xlab = "pop", ylab = "muzyka symfoniczna",
-     main = "Oceny popu w zaleznosci od ocen muzyki symfonicznej - stara wersja",
+     main = "Oceny muzyki symfonicznej w zaleznosci od ocen popu - stara wersja",
      xlim = c(1, 5), ylim = c(1, 5),
      pch = 3, col = "red")
 points(old_pop_nonmusician$wynik, old_symf_nonmusician$wynik, pch = 0, col = "green")
@@ -573,7 +574,7 @@ legend("bottomright", legend = c("ogolem", "muzycy", "brak dosw."), col = c("bla
 
 plot(new_pop_musician$wynik, new_symf_musician$wynik,
      xlab = "pop", ylab = "muzyka symfoniczna",
-     main = "Oceny popu w zaleznosci od ocen muzyki symfonicznej - nowa wersja",
+     main = "Oceny muzyki symfonicznej w zaleznosci od ocen popu - nowa wersja",
      xlim = c(1, 5), ylim = c(1, 5),
      pch = 3, col = "red")
 points(new_pop_nonmusician$wynik, new_symf_nonmusician$wynik, pch = 0, col = "green")
@@ -583,27 +584,23 @@ abline(lm(new_pop_nonmusician$wynik~new_symf_nonmusician$wynik), col = "green")
 legend("bottomright", legend = c("ogolem", "muzycy", "brak dosw."), col = c("black", "red", "green"), lty = c(1, 1, 1))
 
 # 8.2 Regresja liniowa przestrzenności i wrażenia z podziałem na gatunki dla nowej wersji
-plot(new_space$wynik, new_feel$wynik, 
-     xlab = "przestrzennosc", ylab = "wrazenie",
-     main = "Oceny przestrzennosci w zaleznosci od wrazenia - ogolem")
-abline(lm(new_space$wynik~new_feel$wynik))
-
 plot(new_jazz_space$wynik, new_jazz_feel$wynik, 
      xlab = "przestrzennosc", ylab = "wrazenie", 
-     main = "Oceny przestrzennosci w zaleznosci od wrazenia - gatunkami",
+     main = "Oceny wrazenia w zaleznosci od przestrzennosci - gatunkami",
      xlim = c(1, 5), ylim = c(1, 5),
      pch = 3, col = "red")
 points(new_pop_space$wynik, new_pop_feel$wynik, pch = 0, col = "green")
 points(new_symf_space$wynik, new_symf_feel$wynik, pch = 2, col = "blue")
+abline(lm(new_space$wynik~new_feel$wynik))
 abline(lm(new_jazz_space$wynik~new_jazz_feel$wynik), col = "red")
 abline(lm(new_pop_space$wynik~new_pop_feel$wynik), col = "green")
 abline(lm(new_symf_space$wynik~new_symf_feel$wynik), col = "blue")
-legend("bottomleft", legend = c("jazz", "pop", "symfoniczna"), col = c("red", "green", "blue"), lty = c(1, 1, 1))
+legend("bottomleft", legend = c("ogolnie", "jazz", "pop", "symfoniczna"), col = c("black", "red", "green", "blue"), lty = c(1, 1, 1))
 
 # 8.3 Regresja liniowa przestrzenności i wrażenia dla popu i muzyki symfonicznej dla starej wersji
 plot(old_pop_space_musician$wynik, old_pop_feel_musician$wynik, 
      xlab = "przestrzennosc", ylab = "wrazenie",
-     main = "Oceny przestrzennosci w zaleznosci od wrazenia - pop",
+     main = "Oceny wrazenia w zaleznosci od przestrzennosci - pop",
      xlim = c(1, 5), ylim = c(1, 5),
      pch = 3, col = "red")
 points(old_pop_space_nonmusician$wynik, old_pop_feel_nonmusician$wynik, pch = 0, col = "green")
@@ -614,7 +611,7 @@ legend("bottomright", legend = c("ogolem", "muzycy", "brak dosw."), col = c("bla
 
 plot(old_symf_space_musician$wynik, old_symf_feel_musician$wynik, 
      xlab = "przestrzennosc", ylab = "wrazenie",
-     main = "Oceny przestrzennosci w zaleznosci od wrazenia - symfoniczna",
+     main = "Oceny wrazenia w zaleznosci od przestrzennosci - symfoniczna",
      xlim = c(1, 5), ylim = c(1, 5),
      pch = 3, col = "red")
 points(old_symf_space_nonmusician$wynik, old_symf_feel_nonmusician$wynik, pch = 0, col = "green")
@@ -626,7 +623,7 @@ legend("bottomright", legend = c("ogolem", "muzycy", "brak dosw."), col = c("bla
 # 8.4 Regresja liniowa naturalności i przestrzenności dla jazzu
 plot(old_jazz_natural_musician$wynik, old_jazz_space_musician$wynik,
      xlab = "naturalnosc", ylab = "przestrzennosc",
-     main = "Oceny naturalnosci w zaleznosci od przestrzennosci - jazz - stara wersja",
+     main = "Oceny przestrzennosci w zaleznosci od naturalnosci - jazz - stara wersja",
      xlim = c(1, 5), ylim = c(1, 5),
      pch = 3, col = "red")
 points(old_jazz_natural_nonmusician$wynik, old_jazz_space_nonmusician$wynik, pch = 0, col = "green")
@@ -637,7 +634,7 @@ legend("bottomright", legend = c("ogolem", "muzycy", "brak dosw."), col = c("bla
 
 plot(new_jazz_natural_musician$wynik, new_jazz_space_musician$wynik,
      xlab = "naturalnosc", ylab = "przestrzennosc",
-     main = "Oceny naturalnosci w zaleznosci od przestrzennosci - jazz - nowa wersja",
+     main = "Oceny przestrzennosci w zaleznosci od naturalnosci - jazz - nowa wersja",
      xlim = c(1, 5), ylim = c(1, 5),
      pch = 3, col = "red")
 points(new_jazz_natural_nonmusician$wynik, new_jazz_space_nonmusician$wynik, pch = 0, col = "green")
@@ -646,7 +643,7 @@ abline(lm(new_jazz_natural_musician$wynik~new_jazz_feel_musician$wynik), col = "
 abline(lm(new_jazz_natural_nonmusician$wynik~new_jazz_feel_nonmusician$wynik), col = "green")
 legend("bottomright", legend = c("ogolem", "muzycy", "brak dosw."), col = c("black", "red", "green"), lty = c(1, 1, 1))
 
-# ===== Wnioskowanie statystyczne ==============================================
+# ===== III. Wnioskowanie statystyczne =========================================
 # Analiza wariancji dla roznych gatunkow muzyki w zaleznosci od doswiadczenia
 # Test Shapiro-Wilka w celu sprawdzenia normalnosci rozkladu
 shapiro_old_jazz_musician <- shapiro.test(old_jazz_musician$wynik)
@@ -661,3 +658,15 @@ shapiro_old_pop_nonmusician <- shapiro.test(old_pop_nonmusician$wynik)
 shapiro_new_pop_nonmusician <- shapiro.test(new_pop_nonmusician$wynik)
 shapiro_old_symf_nonmusician <- shapiro.test(old_symf_nonmusician$wynik)
 shapiro_new_symf_nonmusician <- shapiro.test(new_symf_nonmusician$wynik)
+
+
+# Analiza wspolczynnikow regresji liniowej
+# Analiza przestrzenności i wrażenia z podziałem na gatunki dla nowej wersji
+lm_new_space_feel <- lm(new_space$wynik~new_feel$wynik)
+lm_new_space_feel_jazz <- lm(new_jazz_space$wynik~new_jazz_feel$wynik)
+lm_new_space_feel_pop <- lm(new_pop_space$wynik~new_pop_feel$wynik)
+lm_new_space_feel_symf <- lm(new_symf_space$wynik~new_symf_feel$wynik)
+summ_lm_new_space_feel <- summary(lm_new_space_feel)
+summ_lm_new_space_feel_jazz <- summary(lm_new_space_feel_jazz)
+summ_lm_new_space_feel_pop <- summary(lm_new_space_feel_pop)
+summ_lm_new_space_feel_symf <- summary(lm_new_space_feel_symf)
