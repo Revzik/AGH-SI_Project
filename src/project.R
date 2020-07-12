@@ -86,40 +86,26 @@ miss_people_new <- distinct(miss_new, sluchacz, .keep_all = TRUE) %>% select(slu
 # i starej - bez podzialu na kryteria i doswiadczenie:
 # W tym celu stworzono funkcje, ktora umozliwia okreslenie podstawowych wartosci statystyki opisowej:
 
-# Uzywane funkcje
-# ==================================================
+# ===== Uzywane funkcje ========================================================
 # Krotkie podsumowanie wynikow:
 podsumowanie <- function(dane) {
   srednia <- round(mean(dane$wynik, na.rm = TRUE), digits = 2)
-  mediana <- median(dane$wynik, na.rm = TRUE)
+  uniqv <- unique(dane$wynik)
+  moda <- uniqv[which.max(tabulate(match(dane$wynik, uniqv)))]
+  
+  kwantyle <- quantile(dane$wynik, na.rm = TRUE, probs = c(0.25, 0.5, 0.75), names = FALSE)
+  q1 <- kwantyle[1]
+  mediana <- kwantyle[2]
+  q3 <- kwantyle[3]
+  
   odchylenie <- round(sd(dane$wynik, na.rm = TRUE), digits = 2)
   skosnosc <- round(skewness(dane$wynik, na.rm = TRUE), digits = 2)
-  kwantyle <- quantile(dane$wynik, na.rm = TRUE, probs = c(0.25, 0.5, 0.75),
-                       names = FALSE)
-  q1 <- kwantyle[1]
-  q2 <- kwantyle[2]
-  q3 <- kwantyle[3]
-  return(data.frame(srednia,mediana,odchylenie, q1, q2, q3))
-}
-
-szukane <- function(values) {
-  srednia_poprawna <- round(mean(values$wynik, na.rm=TRUE), digits=2)
-  mediana_poprawna <- median(values$wynik, na.rm = TRUE)
-  uniqv <- unique(values$wynik)
-  moda_poprawna <- uniqv[which.max(tabulate(match(values$wynik, uniqv)))]
-  odchylenie_poprawne <- round(sd(values$wynik, na.rm = TRUE), digits = 2)
-  wspolczynnik_zmiennosci_poprawny <- odchylenie_poprawne/srednia_poprawna
+  wspolczynnik_zmiennosci <- odchylenie/srednia
   
-  kwantyle_poprawne <- quantile(values$wynik, na.rm = TRUE, probs = c(0.25, 0.5, 0.75),
-                                names = FALSE)
-  q1_p <- kwantyle_poprawne[1]
-  q2_p <- kwantyle_poprawne[2]
-  q3_p <- kwantyle_poprawne[3]
-  
-  rozrzut <- values$wynik
+  rozrzut <- dane$wynik
   rozstep_poprawny <- max(rozrzut) - min(rozrzut)
   
-  return(data.frame(srednia_poprawna, mediana_poprawna, moda_poprawna, odchylenie_poprawne, wspolczynnik_zmiennosci_poprawny, q1_p, q2_p, q3_p, rozstep_poprawny))
+  return(data.frame(srednia, moda, mediana, q1, q3, rozstep_poprawny, odchylenie, skosnosc, wspolczynnik_zmiennosci))
 }
 
 # ================================================== 
@@ -152,11 +138,10 @@ summ_new_median <- podsumowanie(imp_new_plugin)
 
 boxplot(imp_old_plugin$wynik, imp_new_plugin$wynik, main="Oceny dwoch wersji wtyczki", ylab="wynik", names=c("Stara wtyczka", "Nowa wtyczka"))
 
-# Podzial danych
+# ===== Podzial danych =========================================================
 # Ze wzgledu na doswiadczenie
 old_nonmusician <- filter(imp_old_plugin, doswiadczenie == "brak")
 old_musician <- filter(imp_old_plugin, doswiadczenie == "muzyk")
-
 new_nonmusician <- filter(imp_new_plugin, doswiadczenie == "brak")
 new_musician <- filter(imp_new_plugin, doswiadczenie == "muzyk")
 
@@ -165,42 +150,23 @@ old_jazz <- filter(imp_old_plugin, muzyka == "jazz")
 old_pop <- filter(imp_old_plugin, muzyka == "pop")
 old_symf <- filter(imp_old_plugin, muzyka == "symf")
 
-old_jazz_stats <- szukane(old_jazz)
-old_pop_stats <- szukane(old_pop)
-old_symf_stats <-szukane(old_symf)
-
 new_jazz <- filter(imp_new_plugin, muzyka == "jazz")
 new_pop <- filter(imp_new_plugin, muzyka == "pop")
 new_symf <- filter(imp_new_plugin, muzyka == "symf")
 
-new_jazz_stats <- szukane(new_jazz)
-new_pop_stats <- szukane(new_pop)
-new_symf_stats <- szukane(new_symf)
-
 # Ze wzgledu na kryterium
 old_natural <- filter(imp_old_plugin, kryterium == "naturalnosc")
-ONS <- szukane(old_natural)
 old_space <- filter(imp_old_plugin, kryterium == "przestrzennosc")
-OSS <- szukane(old_space)
 old_feel <- filter(imp_old_plugin, kryterium == "wrazenie")
-OFS <- szukane(old_feel)
+
 new_natural <- filter(imp_new_plugin, kryterium == "naturalnosc")
 new_space <- filter(imp_new_plugin, kryterium == "przestrzennosc")
 new_feel <- filter(imp_new_plugin, kryterium == "wrazenie")
 
-NNS <-szukane(new_natural)
-NSS <-szukane(new_space)
-NFS <-szukane(new_feel)
 # Gatunki zaleznie od doswiadczenia
 old_jazz_musician <- filter(imp_old_plugin, muzyka == "jazz", doswiadczenie == "muzyk")
 old_pop_musician <- filter(imp_old_plugin, muzyka == "pop", doswiadczenie == "muzyk")
 old_symf_musician <- filter(imp_old_plugin, muzyka == "symf", doswiadczenie == "muzyk")
-
-OJMS <-szukane(old_jazz_musician)
-
-old_jazz_nonmusician_stats <- szukane(old_jazz_nonmusician)
-Old_pop_nonmusician_stats <- szukane(old_pop_nonmusician)
-old_symf_nonmusician_stats <- szukane(old_symf_nonmusician)
 
 old_jazz_nonmusician <- filter(imp_old_plugin, muzyka == "jazz", doswiadczenie == "brak")
 old_pop_nonmusician <- filter(imp_old_plugin, muzyka == "pop", doswiadczenie == "brak")
@@ -210,51 +176,27 @@ new_jazz_musician <- filter(imp_new_plugin, muzyka == "jazz", doswiadczenie == "
 new_pop_musician <- filter(imp_new_plugin, muzyka == "pop", doswiadczenie == "muzyk")
 new_symf_musician <- filter(imp_new_plugin, muzyka == "symf", doswiadczenie == "muzyk")
 
-new_jms <- szukane(new_jazz_musician)
-new_pms <- szukane(new_pop_musician)
-new_sms <- szukane(new_symf_musician)
-
 new_jazz_nonmusician <- filter(imp_new_plugin, muzyka == "jazz", doswiadczenie == "brak")
 new_pop_nonmusician <- filter(imp_new_plugin, muzyka == "pop", doswiadczenie == "brak")
 new_symf_nonmusician <- filter(imp_new_plugin, muzyka == "symf", doswiadczenie == "brak")
 
-new_JNMS <- szukane(new_jazz_nonmusician)
-new_PNMS <-szukane(new_pop_nonmusician)
-new_SNMS <-szukane(new_symf_nonmusician)
 # Kryterium zalezne od doswiadczenia
-
-# NOWE BOXY!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
-boxplot(old_natural_musician$wynik, old_space_musician$wynik, old_feel_musician$wynik, main="Wyniki starej wersji wtyczki - wrazenie - muzycy", ylab="Wynik", names=c("Naturalnosc", "Przestrzennosc", "Wrazenie"))
-boxplot(new_natural_musician$wynik, new_space_musician$wynik, new_feel_musician$wynik, main="Wyniki starej nowej wtyczki - wrazenie - muzycy", ylab="Wynik", names=c("Naturalnosc", "Przestrzennosc", "Wrazenie"))
-
 old_natural_musician <- filter(imp_old_plugin, kryterium == "naturalnosc", doswiadczenie == "muzyk")
 old_space_musician <- filter(imp_old_plugin, kryterium == "przestrzennosc", doswiadczenie == "muzyk")
 old_feel_musician <- filter(imp_old_plugin, kryterium == "wrazenie", doswiadczenie == "muzyk")
 
-ONMS <-szukane(old_natural_musician)
-OSM <-szukane(old_space_musician)
-OFM <-szukane(old_feel_musician)
 old_natural_nonmusician <- filter(imp_old_plugin, kryterium == "naturalnosc", doswiadczenie == "brak")
 old_space_nonmusician <- filter(imp_old_plugin, kryterium == "przestrzennosc", doswiadczenie == "brak")
 old_feel_nonmusician <- filter(imp_old_plugin, kryterium == "wrazenie", doswiadczenie == "brak")
 
-ONNM <- szukane(old_natural_nonmusician)
-OSNM <-szukane(old_space_nonmusician)
-OFNM <-szukane(old_feel_nonmusician)
 new_natural_musician <- filter(imp_new_plugin, kryterium == "naturalnosc", doswiadczenie == "muzyk")
 new_space_musician <- filter(imp_new_plugin, kryterium == "przestrzennosc", doswiadczenie == "muzyk")
 new_feel_musician <- filter(imp_new_plugin, kryterium == "wrazenie", doswiadczenie == "muzyk")
 
-NNM <-szukane(new_natural_musician)
-NSM <-szukane(new_space_musician)
-NFM <-szukane(new_feel_musician)
 new_natural_nonmusician <- filter(imp_new_plugin, kryterium == "naturalnosc", doswiadczenie == "brak")
 new_space_nonmusician <- filter(imp_new_plugin, kryterium == "przestrzennosc", doswiadczenie == "brak")
 new_feel_nonmusician <- filter(imp_new_plugin, kryterium == "wrazenie", doswiadczenie == "brak")
 
-NNNM <-szukane(new_natural_nonmusician)
-NSNM <-szukane(new_space_nonmusician)
-NFNM <-szukane(new_feel_nonmusician)
 # Gatunki zaleznie od kryterium
 old_jazz_natural <- filter(imp_old_plugin, muzyka == "jazz", kryterium == "naturalnosc")
 old_pop_natural <- filter(imp_old_plugin, muzyka == "pop", kryterium == "naturalnosc")
@@ -329,12 +271,74 @@ new_jazz_feel_nonmusician <- filter(imp_new_plugin, muzyka == "jazz", kryterium 
 new_pop_feel_nonmusician <- filter(imp_new_plugin, muzyka == "pop", kryterium == "wrazenie", doswiadczenie == "brak")
 new_symf_feel_nonmusician <- filter(imp_new_plugin, muzyka == "symf", kryterium == "wrazenie", doswiadczenie == "brak")
 
-# ===== II. WSTEPNA EKSPLORACJA DANYCH NA PODSTAWIE STATYSTYKI OPISOWEJ =====
+# ===== Podsumowanie danych ====================================================
+# Ze wzgledu na doswiadczenie
+summ_old_nonmusician <- podsumowanie(old_nonmusician)
+summ_old_musician <- podsumowanie(old_musician)
+summ_new_nonmusician <- podsumowanie(new_nonmusician)
+summ_new_musician <- podsumowanie(new_musician)
+
+# Ze wzgledu na doswiadczenie
+old_jazz_stats <- podsumowanie(old_jazz)
+old_pop_stats <- podsumowanie(old_pop)
+old_symf_stats <-podsumowanie(old_symf)
+
+new_jazz_stats <- podsumowanie(new_jazz)
+new_pop_stats <- podsumowanie(new_pop)
+new_symf_stats <- podsumowanie(new_symf)
+
+# Ze wzgledu na kryterium
+ONS <- podsumowanie(old_natural)
+OSS <- podsumowanie(old_space)
+OFS <- podsumowanie(old_feel)
+
+NNS <-podsumowanie(new_natural)
+NSS <-podsumowanie(new_space)
+NFS <-podsumowanie(new_feel)
+
+# Ze wzgledu na gatunki zaleznie od doswiadczenia
+OJMS <-podsumowanie(old_jazz_musician)
+
+old_jazz_nonmusician_stats <- podsumowanie(old_jazz_nonmusician)
+Old_pop_nonmusician_stats <- podsumowanie(old_pop_nonmusician)
+old_symf_nonmusician_stats <- podsumowanie(old_symf_nonmusician)
+
+new_jms <- podsumowanie(new_jazz_musician)
+new_pms <- podsumowanie(new_pop_musician)
+new_sms <- podsumowanie(new_symf_musician)
+
+new_JNMS <- podsumowanie(new_jazz_nonmusician)
+new_PNMS <-podsumowanie(new_pop_nonmusician)
+new_SNMS <-podsumowanie(new_symf_nonmusician)
+
+# Ze wzgledu na kryterium zaleznie od doswiadczenia
+ONMS <-podsumowanie(old_natural_musician)
+OSM <-podsumowanie(old_space_musician)
+OFM <-podsumowanie(old_feel_musician)
+
+ONNM <- podsumowanie(old_natural_nonmusician)
+OSNM <-podsumowanie(old_space_nonmusician)
+OFNM <-podsumowanie(old_feel_nonmusician)
+
+NNM <-podsumowanie(new_natural_musician)
+NSM <-podsumowanie(new_space_musician)
+NFM <-podsumowanie(new_feel_musician)
+
+NNNM <-podsumowanie(new_natural_nonmusician)
+NSNM <-podsumowanie(new_space_nonmusician)
+NFNM <-podsumowanie(new_feel_nonmusician)
+
+
+# ===== II. WSTEPNA EKSPLORACJA DANYCH NA PODSTAWIE STATYSTYKI OPISOWEJ ========
+
+# 1. Boxploty
+boxplot(old_natural_musician$wynik, old_space_musician$wynik, old_feel_musician$wynik, main="Wyniki starej wersji wtyczki - wrazenie - muzycy", ylab="Wynik", names=c("Naturalnosc", "Przestrzennosc", "Wrazenie"))
+boxplot(new_natural_musician$wynik, new_space_musician$wynik, new_feel_musician$wynik, main="Wyniki starej nowej wtyczki - wrazenie - muzycy", ylab="Wynik", names=c("Naturalnosc", "Przestrzennosc", "Wrazenie"))
 
 # 2.1. Porowanie ocen starej wtyczki i nowej bez podzialu na doswiadczenie i kryteria
 # 2.1.1. Obliczenie parametrow dla starej i nowej wtyczki
-old_plug_stat <- szukane(imp_old_plugin)
-new_plug_stat <- szukane(imp_new_plugin)
+old_plug_stat <- podsumowanie(imp_old_plugin)
+new_plug_stat <- podsumowanie(imp_new_plugin)
 
 #2.1.2. Histogram
 hist(imp_old_plugin$wynik, main="Wyniki dla starej wersji wtyczki",xlab="Oceny", ylab="Gestosc wystapien", breaks=0.5:5.5, freq= FALSE, prob=TRUE)
@@ -355,20 +359,13 @@ boxplot(new_nonmusician$wynik, new_musician$wynik, main="Oceny nowej wersji wtyc
 plot(density(imp_old_plugin$wynik), main="Wykres gestosci - stara wtyczka", ylab="Czestotliwosc wystapien")
 plot(density(imp_new_plugin$wynik), main="Wykres gestosci - nowa wtyczka", ylab="Czestotliwosc wystapien")
 
-
-#2.1.5. Korelacja
-old_new_cor = cor(imp_old_plugin$wynik, imp_new_plugin$wynik, method = "pearson")
-
-#2.1.6. Regresja liniowa
-model = lm(imp_old_plugin$wynik~imp_new_plugin$wynik)
-
 #2.2. Porowanie starej wtyczki i nowej w zaleznosci od doswiadczenia
 # Obliczenie szukanych wartosci dla starej wtyczki - muzycy i niemuzycy
-old_nonmusician_stats <- szukane(old_nonmusician)
-old_musician_stats <- szukane(old_musician)
+old_nonmusician_stats <- podsumowanie(old_nonmusician)
+old_musician_stats <- podsumowanie(old_musician)
 
-new_nonmusician_stats <- szukane(new_nonmusician)
-new_musician_stats <- szukane(new_musician)
+new_nonmusician_stats <- podsumowanie(new_nonmusician)
+new_musician_stats <- podsumowanie(new_musician)
 
 #2.2.1. Histogramy:
 hist(old_musician$wynik, main="Oceny dla starej wtyczki - muzycy",xlab="Oceny", ylab="Gestosc wystapien", breaks=0.5:5.5, freq= FALSE, prob=TRUE)
@@ -390,15 +387,27 @@ old_new_nonmusician_cor <- cor(old_nonmusician$wynik, new_nonmusician$wynik)
 old_music_nonmusic_cor <- cor(old_musician$wynik, old_nonmusician$wynik)
 new_music_nonmusic_cor <- cor(new_musician$wynik, new_nonmusician$wynik)
 
-#2.2.4 Regresja liniowa
-# Tutaj trzeba zrobic.
-
 # 3. Porownanie gatunkow - ze wzgledu na doswiadczenie i bez wzgledu na doswiadczenie i razem
+# 3.1. Boxplot
+par(mar = c(7.1, 4.1, 4.1, 2.1))
+boxplot(old_natural_musician$wynik, old_space_musician$wynik,
+        old_feel_musician$wynik, new_natural_musician$wynik, 
+        new_space_musician$wynik, new_feel_musician$wynik,
+        main="Wyniki ocen wtyczki - kryterium - muzycy", ylab="Wynik", 
+        names=c("naturalnosc\nstara wersja", "przestrzennosc\nstara wersja", "wrazenie\nstara wersja",
+                "naturalnosc\nnowa wersja", "przestrzennosc\nnowa wersja", "wrazenie\nnowa wersja"),
+        las=2)
 
-# 3.1 Wartosci
-# 3.2 Histogramy
-# 3.3. Boxplot
-# 3.4 Korelacja
+par(mar = c(7.1, 4.1, 4.1, 2.1))
+boxplot(old_natural_nonmusician$wynik, old_space_nonmusician$wynik,
+        old_feel_nonmusician$wynik, new_natural_nonmusician$wynik, 
+        new_space_nonmusician$wynik, new_feel_nonmusician$wynik,
+        main="Wyniki ocen wtyczki - kryterium - brak doswiadczenia", ylab="Wynik", 
+        names=c("naturalnosc\nstara wersja", "przestrzennosc\nstara wersja", "wrazenie\nstara wersja",
+                "naturalnosc\nnowa wersja", "przestrzennosc\nnowa wersja", "wrazenie\nnowa wersja"),
+        las=2)
+
+# 3.2 Korelacja
 old_jazz_pop_cor <- cor(old_jazz$wynik, old_pop$wynik)
 old_jazz_symf_cor <- cor(old_jazz$wynik, old_symf$wynik)
 old_symf_pop_cor <- cor(old_symf$wynik, old_pop$wynik)
@@ -423,14 +432,29 @@ new_jazz_pop_nonmusician_cor <- cor(new_jazz_nonmusician$wynik, new_pop_nonmusic
 new_jazz_symf_nonmusician_cor <- cor(new_jazz_nonmusician$wynik, new_symf_nonmusician$wynik)
 new_symf_pop_nonmusician_cor <- cor(new_symf_nonmusician$wynik, new_pop_nonmusician$wynik)
 
-# a. Korelacja pomiedzy jazzem dla starej wtyczki i nowej dla muzykow
 old_new_jazz_musician_cor <- cor(old_jazz_musician$wynik, new_jazz_musician$wynik)
 old_new_pop_musician_cor <- cor(old_pop_musician$wynik, new_pop_musician$wynik)
 old_new_symf_musician_cor <- cor(old_symf_musician$wynik, new_symf_musician$wynik)
 
-# b. Podobne korelacje
-
 # 4. Porownanie ze wzgledu na wrazenie - bez podzialu na gatunki
+par(mar = c(7.1, 4.1, 4.1, 2.1))
+boxplot(old_jazz_musician$wynik, old_pop_musician$wynik,
+        old_symf_musician$wynik, new_jazz_musician$wynik, 
+        new_pop_musician$wynik, new_symf_musician$wynik,
+        main="Wyniki ocen wtyczki - gatunek - muzycy", ylab="Wynik", 
+        names=c("jazz\nstara wersja", "pop\nstara wersja", "symfoniczna\nstara wersja",
+                "jazz\nnowa wersja", "pop\nnowa wersja", "symfoniczna\nnowa wersja"),
+        las=2)
+
+par(mar = c(7.1, 4.1, 4.1, 2.1))
+boxplot(old_jazz_nonmusician$wynik, old_pop_nonmusician$wynik,
+        old_symf_nonmusician$wynik, new_jazz_nonmusician$wynik, 
+        new_pop_nonmusician$wynik, new_symf_nonmusician$wynik,
+        main="Wyniki ocen wtyczki - gatunek - brak doswiadczenia", ylab="Wynik", 
+        names=c("jazz\nstara wersja", "pop\nstara wersja", "symfoniczna\nstara wersja",
+                "jazz\nnowa wersja", "pop\nnowa wersja", "symfoniczna\nnowa wersja"),
+        las=2)
+
 old_new_natural_cor <- cor(old_natural$wynik, new_natural$wynik)
 old_new_feel_cor <- cor(old_space$wynik, new_space$wynik)
 old_new_feel_cor <- cor(old_feel$wynik, new_feel$wynik)
@@ -534,3 +558,90 @@ new_pop_natural_space_nonmusician_cor <- cor(new_pop_natural_nonmusician$wynik, 
 new_pop_natural_feel_nonmusician_cor <- cor(new_pop_natural_nonmusician$wynik, new_pop_feel_nonmusician$wynik)
 new_pop_feel_space_nonmusician_cor <- cor(new_pop_feel_nonmusician$wynik, new_pop_space_nonmusician$wynik)
 
+# 8 regresja liniowa
+# 8.1 Regresja liniowa popu i muzyki symfonicznej
+plot(old_pop_musician$wynik, old_symf_musician$wynik,
+     xlab = "pop", ylab = "muzyka symfoniczna",
+     main = "Oceny popu w zaleznosci od ocen muzyki symfonicznej - stara wersja",
+     xlim = c(1, 5), ylim = c(1, 5),
+     pch = 3, col = "red")
+points(old_pop_nonmusician$wynik, old_symf_nonmusician$wynik, pch = 0, col = "green")
+abline(lm(old_pop$wynik~old_symf$wynik))
+abline(lm(old_pop_musician$wynik~old_symf_musician$wynik), col = "red")
+abline(lm(old_pop_nonmusician$wynik~old_symf_nonmusician$wynik), col = "green")
+legend("bottomright", legend = c("ogolem", "muzycy", "brak dosw."), col = c("black", "red", "green"), lty = c(1, 1, 1))
+
+plot(new_pop_musician$wynik, new_symf_musician$wynik,
+     xlab = "pop", ylab = "muzyka symfoniczna",
+     main = "Oceny popu w zaleznosci od ocen muzyki symfonicznej - nowa wersja",
+     xlim = c(1, 5), ylim = c(1, 5),
+     pch = 3, col = "red")
+points(new_pop_nonmusician$wynik, new_symf_nonmusician$wynik, pch = 0, col = "green")
+abline(lm(new_pop$wynik~new_symf$wynik))
+abline(lm(new_pop_musician$wynik~new_symf_musician$wynik), col = "red")
+abline(lm(new_pop_nonmusician$wynik~new_symf_nonmusician$wynik), col = "green")
+legend("bottomright", legend = c("ogolem", "muzycy", "brak dosw."), col = c("black", "red", "green"), lty = c(1, 1, 1))
+
+# 8.2 Regresja liniowa przestrzenności i wrażenia z podziałem na gatunki dla nowej wersji
+plot(new_space$wynik, new_feel$wynik, 
+     xlab = "przestrzennosc", ylab = "wrazenie",
+     main = "Oceny przestrzennosci w zaleznosci od wrazenia - ogolem")
+abline(lm(new_space$wynik~new_feel$wynik))
+
+plot(new_jazz_space$wynik, new_jazz_feel$wynik, 
+     xlab = "przestrzennosc", ylab = "wrazenie", 
+     main = "Oceny przestrzennosci w zaleznosci od wrazenia - gatunkami",
+     xlim = c(1, 5), ylim = c(1, 5),
+     pch = 3, col = "red")
+points(new_pop_space$wynik, new_pop_feel$wynik, pch = 0, col = "green")
+points(new_symf_space$wynik, new_symf_feel$wynik, pch = 2, col = "blue")
+abline(lm(new_jazz_space$wynik~new_jazz_feel$wynik), col = "red")
+abline(lm(new_pop_space$wynik~new_pop_feel$wynik), col = "green")
+abline(lm(new_symf_space$wynik~new_symf_feel$wynik), col = "blue")
+legend("bottomleft", legend = c("jazz", "pop", "symfoniczna"), col = c("red", "green", "blue"), lty = c(1, 1, 1))
+
+# 8.3 Regresja liniowa przestrzenności i wrażenia dla popu i muzyki symfonicznej dla starej wersji
+plot(old_pop_space_musician$wynik, old_pop_feel_musician$wynik, 
+     xlab = "przestrzennosc", ylab = "wrazenie",
+     main = "Oceny przestrzennosci w zaleznosci od wrazenia - pop",
+     xlim = c(1, 5), ylim = c(1, 5),
+     pch = 3, col = "red")
+points(old_pop_space_nonmusician$wynik, old_pop_feel_nonmusician$wynik, pch = 0, col = "green")
+abline(lm(old_pop_space$wynik~old_pop_feel$wynik))
+abline(lm(old_pop_space_musician$wynik~old_pop_feel_musician$wynik), col = "red")
+abline(lm(old_pop_space_nonmusician$wynik~old_pop_feel_nonmusician$wynik), col = "green")
+legend("bottomright", legend = c("ogolem", "muzycy", "brak dosw."), col = c("black", "red", "green"), lty = c(1, 1, 1))
+
+plot(old_symf_space_musician$wynik, old_symf_feel_musician$wynik, 
+     xlab = "przestrzennosc", ylab = "wrazenie",
+     main = "Oceny przestrzennosci w zaleznosci od wrazenia - symfoniczna",
+     xlim = c(1, 5), ylim = c(1, 5),
+     pch = 3, col = "red")
+points(old_symf_space_nonmusician$wynik, old_symf_feel_nonmusician$wynik, pch = 0, col = "green")
+abline(lm(old_symf_space$wynik~old_symf_feel$wynik))
+abline(lm(old_symf_space_musician$wynik~old_symf_feel_musician$wynik), col = "red")
+abline(lm(old_symf_space_nonmusician$wynik~old_symf_feel_nonmusician$wynik), col = "green")
+legend("bottomright", legend = c("ogolem", "muzycy", "brak dosw."), col = c("black", "red", "green"), lty = c(1, 1, 1))
+
+# 8.4 Regresja liniowa naturalności i przestrzenności dla jazzu
+plot(old_jazz_natural_musician$wynik, old_jazz_space_musician$wynik,
+     xlab = "naturalnosc", ylab = "przestrzennosc",
+     main = "Oceny naturalnosci w zaleznosci od przestrzennosci - jazz - stara wersja",
+     xlim = c(1, 5), ylim = c(1, 5),
+     pch = 3, col = "red")
+points(old_jazz_natural_nonmusician$wynik, old_jazz_space_nonmusician$wynik, pch = 0, col = "green")
+abline(lm(old_jazz_natural$wynik~old_jazz_feel$wynik))
+abline(lm(old_jazz_natural_musician$wynik~old_jazz_feel_musician$wynik), col = "red")
+abline(lm(old_jazz_natural_nonmusician$wynik~old_jazz_feel_nonmusician$wynik), col = "green")
+legend("bottomright", legend = c("ogolem", "muzycy", "brak dosw."), col = c("black", "red", "green"), lty = c(1, 1, 1))
+
+plot(new_jazz_natural_musician$wynik, new_jazz_space_musician$wynik,
+     xlab = "naturalnosc", ylab = "przestrzennosc",
+     main = "Oceny naturalnosci w zaleznosci od przestrzennosci - jazz - nowa wersja",
+     xlim = c(1, 5), ylim = c(1, 5),
+     pch = 3, col = "red")
+points(new_jazz_natural_nonmusician$wynik, new_jazz_space_nonmusician$wynik, pch = 0, col = "green")
+abline(lm(new_jazz_natural$wynik~new_jazz_feel$wynik))
+abline(lm(new_jazz_natural_musician$wynik~new_jazz_feel_musician$wynik), col = "red")
+abline(lm(new_jazz_natural_nonmusician$wynik~new_jazz_feel_nonmusician$wynik), col = "green")
+legend("bottomright", legend = c("ogolem", "muzycy", "brak dosw."), col = c("black", "red", "green"), lty = c(1, 1, 1))
